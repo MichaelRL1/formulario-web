@@ -1,5 +1,6 @@
 def PROJECT_ID = "fluid-analogy-302119"
-def NAME_PROJECT = "formulario-app"
+def PROJECT_NAME = "formulario-web"
+
 
 pipeline {
   options {
@@ -7,7 +8,7 @@ pipeline {
   }
   agent {
     kubernetes {
-      label "${NAME_PROJECT}"
+      label "${PROJECT_NAME}"
       defaultContainer "jnlp"
       yaml """
 apiVersion: v1
@@ -98,17 +99,21 @@ spec:
           sh "npm -v"
           sh "npm install -g @angular/cli@latest"
           sh "apk update && apk upgrade --update --available && apk add --no-cache && echo http://nl.alpinelinux.org/alpine/v3.10/main >> /etc/apk/repositories && echo http://nl.alpinelinux.org/alpine/v3.10/community >> /etc/apk/repositories && apk add --no-cache chromium nss freetype harfbuzz ttf-freefont"
+
+
         }
       }
     }
+
     stage("Build") {
       steps {
         container("node") {
           sh "npm install"
+          sh "ng --version"
         }
       }
     }
-    stage ("Build Project WEB") {
+    stage ("Build Project web") {
       stages {
         stage ('build develop') {
           when { branch 'develop'}
@@ -122,16 +127,18 @@ spec:
         }
       }
     }
+
     stage ("Build Image Docker") {
-      when {branch 'develop'}
-      }      
+      when { branch 'develop'}      
       steps {
         container("docker"){
           sh "docker build --tag=${JOB_NAME}:${BUILD_NUMBER} ."
+          sh "docker images"
         }
       }
     }
-    stage("Publish Projec docker") {
+
+    stage("Publish Project web") {
       when { branch 'develop'}      
       steps {
         container("docker") {
@@ -141,7 +148,7 @@ spec:
       }
     }
 
-    stage("Deploy BUCKET") {
+    stage("Deploy Bucket front") {
       when { branch 'develop' }
       steps {
         container("gcloud") {
@@ -151,7 +158,7 @@ spec:
         }
       }
     }
-    stage('Deploy WEB') {
+        stage('Deploy web vm') {
       when { branch 'develop' }
       steps {
         container("gcloud") {
@@ -172,6 +179,10 @@ spec:
         }
       }
     }
+
+   
+    
+    
   }
   post {
     always {
