@@ -5,7 +5,7 @@ FROM nginx:alpine
 WORKDIR /formulario-web
 
 # Copy project files
-RUN rm -v /usr/share/nginx/html/index.html
+RUN rm /usr/share/nginx/html/index.html
 COPY ./dist/demo  /usr/share/nginx/html
 
 # expose port and define CMD
